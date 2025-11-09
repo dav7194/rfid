@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f7f9;
+    margin: 0;
+    padding: 0;
+    color: #1f2937;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0.5rem 1rem;
+  }
+
+  header {
+    text-align: center;
+    padding: 1.25rem 1rem;
+    background-color: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+  }
+  
+  /* New Status Styles */
+  header p {
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
+    font-weight: 600;
+  }
+  #teacherStatus {
+    color: #1d4ed8; /* Blue */
+  }
+  #studentCount {
+    color: #15803d; /* Green */
+  }
+
+  /* Modified Controls Styles for Filters */
+  .controls {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem; /* Spacing between elements */
+    margin-bottom: 0.75rem;
+  }
+  
+  .filter-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-grow: 1; /* Allow filters to take space */
+    max-width: 400px; /* Limit filter width */
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  /* New Input Styles */
+  .filter-group input {
+  width: 100px;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif;
+    color: #374151;
+    flex: 1; /* Make inputs take equal space */
+  }
+  
+  .btn {
+    font-family: 'Inter', sans-serif;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    white-space: nowrap; /* Prevent buttons from wrapping */
+  }
+  
+  .btn-primary {
+    background-color: #2563eb;
+    color: white;
+  }
+  .btn-primary:hover {
+    background-color: #1d4ed8;
+  }
+  
+  .btn-danger {
+    background-color: #dc2626;
+    color: white;
+  }
+  .btn-danger:hover {
+    background-color: #b91c1c;
+  }
+
+  /* Status Message */
+  #message {
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4b5563;
+  }
+
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+    background-color: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    margin-top: 0.5rem;
+  }
+
+  table {
+    width: 91dvw;
+    border-collapse: collapse;
+    min-width: 290px; /* Prevent shrinking too much */
+    font-size: 0.8rem;
+  }
+
+  thead {
+    background-color: #f9fafb;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem; /* Increased padding */
+    word-wrap: break-word;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  tbody tr:last-child th,
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  th {
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  td:nth-child(2) {
+    font-family: monospace;
+    color: #4b5563;
+  }
+
+  td:nth-child(3) {
+    font-weight: 600;
+  }
+
+  tbody tr:hover {
+    background-color: #eff6ff;
+    transition: background-color 0.15s ease-in-out;
+  }
+  
+  /* New Teacher Row Style */
+  .teacher-row {
+    background-color: #fffbeb; /* Light yellow */
+  }
+  .teacher-row td:nth-child(3) {
+    color: #b45309; /* Amber */
+    font-weight: 700;
+  }
+  .teacher-row:hover {
+    background-color: #fef3c7; /* Darker yellow on hover */
+  }
+  
+  /* Media query for smaller screens */
+  @media (max-width: 600px) {
+    .controls {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .filter-group {
+      max-width: none;
+    }
+    .btn-group {
+      justify-content: space-around;
+      width: 100%;
+    }
+    #message {
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Attendance Log</h1>
+    <p id="teacherStatus">...</p>
+    <p id="studentCount">...</p>
+  </header>
+
+  <div class="controls">
+    <div id="message">⏳ Initializing...</div>
+    
+    <div class="filter-group">
+      <input type="date" id="dateFilter" placeholder="Filter by Date">
+      <input type="text" id="nameFilter" placeholder="Filter by Name">
+    </div>
+    
+    <div class="btn-group">
+      <button id="refreshBtn" class="btn btn-primary">Refresh</button>
+      <button id="deleteBtn" class="btn btn-danger">Delete All</button>
+    </div>
+  </div>
+
+
+  <div class="table-container">
+    <table id="attendanceTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Time (IST)</th>
+          <th>Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // --- CONFIGURATION ---
+  // !! IMPORTANT: Paste your new script URL here
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBJLPAgG_Q-ryN_RCZ88qU05Af9F8z1J-C8QcIwyk0DZCHBsRPB0W9o6EH-J2Xqlzu2A/exec";
+  
+  const GET_URL = `${SCRIPT_URL}?action=get`;
+  const DELETE_URL = `${SCRIPT_URL}?action=deleteall`;
+  
+  const TEACHER_ID = "CT";
+  const TEACHER_FULL_NAME = "Sumant Dhar Dubey";
+  // --- END CONFIGURATION ---
+
+  let rawAttendanceData = []; // Store the fetched and parsed data
+  const msg = document.getElementById("message");
+  const teacherStatusEl = document.getElementById("teacherStatus");
+  const studentCountEl = document.getElementById("studentCount");
+  const tbody = document.querySelector("#attendanceTable tbody");
+  
+  // NEW: Filter elements
+  const dateFilter = document.getElementById("dateFilter");
+  const nameFilter = document.getElementById("nameFilter");
+
+  // --- Universal date parser ---
+  function parseAnyDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+
+    let d = new Date(value);
+    if (!isNaN(d.getTime())) return d;
+
+    // Handle other specific formats if needed
+    try {
+      const cleaned = value.replace(" (India Standard Time)", "").replace("GMT+0530", "+05:30");
+      d = new Date(cleaned);
+      if (!isNaN(d.getTime())) return d;
+    } catch (e) {}
+    
+    console.warn("Could not parse date:", value);
+    return null; // Return null if unparseable
+  }
+
+  function formatDisplayDate(date) {
+    if (!date || isNaN(date)) return "N/A";
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+  
+  // NEW: Function to format date for comparison (YYYY-MM-DD)
+  function formatDateForComparison(date) {
+    if (!date || isNaN(date.getTime())) return null;
+    return date.toISOString().split('T')[0];
+  }
+  
+  function formatDisplayTime(date) {
+    if (!date || isNaN(date)) return "N/A";
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata"
+    });
+  }
+
+  async function fetchAttendance() {
+    msg.innerText = "Fetching data...";
+    msg.style.color = "#4b5563"; // Default color
+
+    try {
+      const res = await fetch(GET_URL);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+
+      // Convert and clean data
+      const parsedData = data.map((row) => ({
+        Date: parseAnyDate(row.Date),
+        Time: parseAnyDate(row.Time), // Use 'Time' for sorting
+        Name: row.Name || "Unknown",
+        // Add a display name field for filtering purposes
+        DisplayName: row.Name === TEACHER_ID ? `${TEACHER_FULL_NAME} (CT)` : row.Name
+      })).filter(row => row.Time); // Filter out rows with invalid dates
+
+      // Remove duplicates (keep latest time per Name)
+      const unique = {};
+      parsedData.forEach((row) => {
+        if (!unique[row.Name] || row.Time > unique[row.Name].Time) {
+          unique[row.Name] = row;
+        }
+      });
+
+      rawAttendanceData = Object.values(unique); // Store the raw, unique data
+      
+      // Call the function to apply current filters and display
+      applyFiltersAndShow();
+
+      msg.innerText = `Last Updated: ${new Date().toLocaleTimeString("en-IN")}`;
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      msg.innerText = "⚠️ Failed to fetch data.";
+      msg.style.color = "#b91c1c"; // Red
+      teacherStatusEl.innerText = "Status: Error";
+      studentCountEl.innerText = "Count: Error";
+    }
+  }
+  
+  // NEW: Function to apply filters and manage the displayed list
+  function applyFiltersAndShow() {
+    let filteredList = [...rawAttendanceData]; // Start with a copy of all data
+
+    const filterDate = dateFilter.value; // YYYY-MM-DD format from input
+    const filterName = nameFilter.value.toLowerCase().trim();
+
+    // 1. Apply Date Filter
+    if (filterDate) {
+      filteredList = filteredList.filter(row => {
+        const rowDateStr = formatDateForComparison(row.Date);
+        return rowDateStr === filterDate;
+      });
+    }
+
+    // 2. Apply Name Filter
+    if (filterName) {
+      filteredList = filteredList.filter(row => 
+        row.DisplayName.toLowerCase().includes(filterName)
+      );
+    }
+
+    // --- Recalculate Teacher and Student Count (only for the overall raw data, not the filtered view) ---
+    // Use rawAttendanceData for status calculation
+    let teacherRecord = rawAttendanceData.find(p => p.Name === TEACHER_ID);
+    const studentsPresent = rawAttendanceData.filter(p => p.Name !== TEACHER_ID).length;
+
+    // Update header status
+    if (teacherRecord) {
+      teacherStatusEl.innerText = `Class Teacher: Present`;
+      teacherStatusEl.style.color = "#15803d"; // Green
+    } else {
+      teacherStatusEl.innerText = `Class Teacher : Absent`;
+      teacherStatusEl.style.color = "#b91c1c"; // Red
+    }
+    
+    studentCountEl.innerText = `Students Present : ${studentsPresent} / 5`;
+    // --- End Status Recalculation ---
+
+
+    // 3. Sort and Prepare for Display
+    let displayList = filteredList.filter(row => row.Name !== TEACHER_ID); // Filter out teacher first
+    
+    // Sort students by time (latest first)
+    displayList.sort((a, b) => b.Time - a.Time);
+
+    // If teacher is present AND is in the filtered list (or no filters applied), put them at the top
+    if (teacherRecord && filteredList.some(row => row.Name === TEACHER_ID)) {
+       displayList.unshift(teacherRecord);
+    }
+    
+    showAttendance(displayList);
+  }
+
+
+  function showAttendance(list) {
+    tbody.innerHTML = ""; // Clear existing table
+
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 1rem; color: #6b7280;">No records match the current filter.</td></tr>';
+      return;
+    }
+
+    list.forEach((row) => {
+      const tr = document.createElement("tr");
+      
+      const displayName = row.DisplayName; // Use the pre-calculated display name
+      
+      // Add special class for teacher row
+      if (row.Name === TEACHER_ID) {
+        tr.className = "teacher-row";
+      }
+
+      const displayDate = formatDisplayDate(row.Date);
+      const displayTime = formatDisplayTime(row.Time);
+
+      tr.innerHTML = `
+        <td>${displayDate}</td>
+        <td>${displayTime}</td>
+        <td>${displayName}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // --- Delete Function (Unchanged) ---
+  async function deleteAttendance() {
+    if (!confirm("Are you sure you want to delete ALL attendance records?\nThis action cannot be undone.")) {
+      return;
+    }
+
+    msg.innerText = "Deleting records..";
+    msg.style.color = "#b91c1c"; // Red
+
+    try {
+      const res = await fetch(DELETE_URL);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const result = await res.json();
+
+      if (result.status === "success") {
+        msg.innerText = "All records deleted.";
+        msg.style.color = "#15803d"; // Green
+      } else {
+        throw new Error(result.message || "Unknown error from script.");
+      }
+      
+      // Refresh the list to show it's empty
+      fetchAttendance(); 
+
+    } catch (err) {
+      console.error("Delete Error:", err);
+      msg.innerText = "⚠️ Failed to delete data.";
+      msg.style.color = "#b91c1c"; // Red
+    }
+  }
+
+
+  // --- Event Listeners ---
+  document.getElementById("refreshBtn").addEventListener("click", fetchAttendance);
+  document.getElementById("deleteBtn").addEventListener("click", deleteAttendance);
+  
+  // NEW: Add event listeners for filter inputs to re-filter the data immediately
+  dateFilter.addEventListener("change", applyFiltersAndShow);
+  nameFilter.addEventListener("input", applyFiltersAndShow);
+  
+  // Fetch data on initial page load
+  document.addEventListener("DOMContentLoaded", fetchAttendance);
+</script>
+
+</body>
+</html>
