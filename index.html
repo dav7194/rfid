@@ -438,11 +438,7 @@
 
   // --- Delete Function (Unchanged) ---
   async function deleteAttendance() {
-    var password = prompt("Enter Password :- ");
-    if(prompt != "719400"){
-      return;
-    }
-    else{
+    
     if (!confirm("Are you sure you want to delete ALL attendance records?\nThis action cannot be undone.")) {
       return;
     }
@@ -470,7 +466,7 @@
       msg.innerText = "⚠️ Failed to delete data.";
       msg.style.color = "#b91c1c"; // Red
     }
-        }
+        
   }
 
 
